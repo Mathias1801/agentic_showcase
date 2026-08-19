@@ -329,19 +329,124 @@
   }
   footer a { color: var(--accent); text-decoration: none; }
   footer a:hover { text-decoration: underline; }
+
+  /* ---------- top nav ---------- */
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
+    font-size: 0.85rem;
+  }
+  .toc a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 1px solid transparent;
+  }
+  .toc a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ---------- benefit cards ---------- */
+  .benefits {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.9rem;
+  }
+  @media (max-width: 720px) { .benefits { grid-template-columns: 1fr; } }
+  .benefit {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.25rem 1.3rem;
+  }
+  .benefit .big {
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .benefit h3 { margin: 0 0 0.4rem; font-size: 1.02rem; }
+  .benefit p { margin: 0; font-size: 0.88rem; color: var(--text-dim); }
+
+  .detail-label {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--bg-sunken);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.25rem 0.65rem;
+    margin-bottom: 0.6rem;
+  }
+
+  /* ---------- recreate steps ---------- */
+  .steps { display: grid; gap: 0.9rem; counter-reset: step; }
+  .step {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.1rem;
+  }
+  .step .num {
+    counter-increment: step;
+    flex: 0 0 auto;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .step .num::before { content: counter(step); }
+  .step-body { flex: 1 1 auto; min-width: 0; }
+  .step-body h4 { margin: 0 0 0.4rem; font-size: 0.92rem; }
+  .step-body pre {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.8rem;
+    overflow-x: auto;
+    margin: 0.3rem 0 0;
+  }
+  .step-body p { margin: 0.3rem 0 0; font-size: 0.85rem; color: var(--text-dim); }
+
+  /* ---------- decision diagram ---------- */
+  .diagram-figure {
+    margin: 2rem 0 0;
+    padding: 1.25rem 1.25rem 0.9rem;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .diagram-figure svg { display: block; width: 100%; height: auto; }
+  .diagram-figure svg text { font-family: -apple-system, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif; }
+  .diagram-figure figcaption {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
 </style>
 
 <main>
 
   <div class="eyebrow">Portfolio project — multi-agent systems</div>
-  <h1>An analytics agent that's designed to be told "no."</h1>
+  <h1>An analytics agent that knows when to say "I'm not sure."</h1>
   <p class="lede">
-    A four-agent pipeline that answers natural-language business questions
-    against a real dataset — but the interesting part isn't the answers,
-    it's the four independent, mostly-deterministic checks that stand
-    between a generated narrative and the stakeholder seeing it. Every
-    example below is a real run against real OpenAI + Claude Haiku 4.5 API
-    calls, not a mockup.
+    Ask it a business question in plain English — like "why did margin
+    drop last quarter" — and it answers using your real data. The part
+    worth showing off isn't the answer: it's that the answer gets checked
+    four separate ways before you ever see it, and if it can't hold up,
+    you get an honest "I can't confirm that" instead of a confident guess.
   </p>
   <div class="badges">
     <span class="badge">4 specialized agents</span>
@@ -351,7 +456,38 @@
     <span class="badge">7 real bugs found &amp; fixed via live runs</span>
   </div>
 
+  <nav class="toc">
+    <a href="#benefit">The benefit</a>
+    <a href="#why">Why it's needed</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#showcase">Live examples</a>
+    <a href="#recreate">Run it yourself</a>
+  </nav>
+
+  <section id="benefit">
+    <h2>The short version</h2>
+    <p class="section-sub">No jargon — this is the whole pitch. Everything past this section is detail for anyone who wants to see how it's actually built.</p>
+    <div class="benefits">
+      <div class="benefit">
+        <div class="big">💬</div>
+        <h3>Ask it a normal question</h3>
+        <p>No SQL, no dashboards. Type a business question the way you'd ask a colleague, and it pulls the real numbers to answer it.</p>
+      </div>
+      <div class="benefit">
+        <div class="big">🔎</div>
+        <h3>It fact-checks itself</h3>
+        <p>Every number in the answer is traced back to the actual data — twice, by two separate checks — before it's allowed out.</p>
+      </div>
+      <div class="benefit">
+        <div class="big">🚫</div>
+        <h3>It's allowed to refuse</h3>
+        <p>If the evidence is thin, the claim is speculative, or a second AI from a different company disagrees, it withholds the answer instead of guessing.</p>
+      </div>
+    </div>
+  </section>
+
   <section id="why">
+    <span class="detail-label">Detail</span>
     <h2>Why not just ask a chatbot?</h2>
     <p class="section-sub">
       A single LLM call can already produce a fluent, confident-sounding
@@ -384,6 +520,7 @@
   </section>
 
   <section id="architecture">
+    <span class="detail-label">Detail</span>
     <h2>Pipeline</h2>
     <p class="section-sub">Straight-line, hand-built — no orchestration framework. One question in, one Critic-approved (or rejected, or held) report out.</p>
     <div class="pipeline">
@@ -411,9 +548,75 @@
         <p>Pure formatting. A rejected or low-confidence result structurally cannot be presented as a clean answer.</p>
       </div>
     </div>
+
+    <figure class="diagram-figure">
+      <svg viewBox="0 0 900 400" role="img" aria-label="Diagram: the Critic runs four independent checks on the draft narrative. If all four pass, the report is shown to the user. If a causal claim is flagged, it is held for human review. If any single check fails, the answer is withheld entirely.">
+        <defs>
+          <marker id="arrowNeutral" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+          </marker>
+          <marker id="arrowPass" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--pass)" />
+          </marker>
+          <marker id="arrowHold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--hold)" />
+          </marker>
+          <marker id="arrowReject" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--reject)" />
+          </marker>
+        </defs>
+
+        <!-- input: draft narrative -->
+        <rect x="30" y="160" width="190" height="70" rx="12" fill="var(--bg-sunken)" stroke="currentColor" stroke-width="1.5" />
+        <text x="125" y="190" text-anchor="middle" font-size="12.5" font-weight="700" fill="currentColor">Draft narrative</text>
+        <text x="125" y="208" text-anchor="middle" font-size="11" fill="var(--text-dim)">written by the Analysis agent</text>
+
+        <line x1="220" y1="195" x2="357" y2="195" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrowNeutral)" />
+
+        <!-- critic box with 4 checks -->
+        <rect x="360" y="90" width="230" height="210" rx="12" fill="var(--bg-raised)" stroke="currentColor" stroke-width="1.5" />
+        <text x="475" y="115" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">Critic — 4 independent checks</text>
+        <line x1="380" y1="126" x2="570" y2="126" stroke="currentColor" stroke-width="1" opacity="0.3" />
+
+        <circle cx="385" cy="146" r="3.5" fill="currentColor" />
+        <text x="398" y="150" font-size="12" fill="currentColor">Grounding re-check</text>
+        <circle cx="385" cy="178" r="3.5" fill="currentColor" />
+        <text x="398" y="182" font-size="12" fill="currentColor">Confidence threshold</text>
+        <circle cx="385" cy="210" r="3.5" fill="currentColor" />
+        <text x="398" y="214" font-size="12" fill="currentColor">Human-in-loop scan</text>
+        <circle cx="385" cy="242" r="3.5" fill="currentColor" />
+        <text x="398" y="246" font-size="12" fill="currentColor">Cross-provider judge</text>
+
+        <text x="475" y="280" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-dim)">ALL FOUR MUST PASS</text>
+
+        <!-- fan-out to three outcomes -->
+        <path d="M590,195 L650,195 L650,80 L698,80" fill="none" stroke="var(--pass)" stroke-width="1.5" marker-end="url(#arrowPass)" />
+        <path d="M590,195 L698,195" fill="none" stroke="var(--hold)" stroke-width="1.5" marker-end="url(#arrowHold)" />
+        <path d="M590,195 L650,195 L650,310 L698,310" fill="none" stroke="var(--reject)" stroke-width="1.5" marker-end="url(#arrowReject)" />
+
+        <text x="675" y="68" text-anchor="middle" font-size="11" font-weight="600" fill="var(--pass)">all checks pass</text>
+        <text x="645" y="185" text-anchor="middle" font-size="11" font-weight="600" fill="var(--hold)">causal claim flagged</text>
+        <text x="675" y="298" text-anchor="middle" font-size="11" font-weight="600" fill="var(--reject)">any check fails</text>
+
+        <!-- outcome boxes -->
+        <rect x="700" y="45" width="180" height="70" rx="12" fill="var(--pass-bg)" stroke="var(--pass)" stroke-width="1.5" />
+        <text x="790" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="var(--pass)">✓ Shown to user</text>
+        <text x="790" y="94" text-anchor="middle" font-size="10.5" fill="var(--text-dim)">clean report, nothing withheld</text>
+
+        <rect x="700" y="160" width="180" height="70" rx="12" fill="var(--hold-bg)" stroke="var(--hold)" stroke-width="1.5" />
+        <text x="790" y="190" text-anchor="middle" font-size="13" font-weight="700" fill="var(--hold)">⚑ Held for review</text>
+        <text x="790" y="209" text-anchor="middle" font-size="10.5" fill="var(--text-dim)">needs a human's sign-off first</text>
+
+        <rect x="700" y="275" width="180" height="70" rx="12" fill="var(--reject-bg)" stroke="var(--reject)" stroke-width="1.5" />
+        <text x="790" y="305" text-anchor="middle" font-size="13" font-weight="700" fill="var(--reject)">✕ Withheld</text>
+        <text x="790" y="324" text-anchor="middle" font-size="10.5" fill="var(--text-dim)">nothing shown to the user</text>
+      </svg>
+      <figcaption>The four checks are combined with AND logic, not majority vote — a single failing or flagged check is enough to hold or withhold the answer. Only a unanimous pass reaches the user. See it happen on real questions in the live examples below.</figcaption>
+    </figure>
   </section>
 
   <section id="guardrails">
+    <span class="detail-label">Detail</span>
     <h2>The four checks, in <code>agents/critic_agent.py</code></h2>
     <div class="guardrails">
       <div class="grail">
@@ -436,6 +639,7 @@
   </section>
 
   <section id="showcase">
+    <span class="detail-label">Detail</span>
     <h2>Live output — four real runs</h2>
     <p class="section-sub">
       From <code>eval/golden_questions.py</code>, run straight through <code>demo.py</code>
@@ -528,6 +732,7 @@
   </section>
 
   <section id="bugs">
+    <span class="detail-label">Detail</span>
     <h2>Proven against real API calls, not just fixtures</h2>
     <p class="section-sub">
       75 hand-written tests use fake LLM clients and passed the whole way
@@ -547,9 +752,59 @@
     </div>
   </section>
 
+  <section id="recreate">
+    <span class="detail-label">Recreate it</span>
+    <h2>Run it yourself</h2>
+    <p class="section-sub">
+      Everything above comes from a real run of this pipeline against a
+      synthetic dataset. It takes about five minutes to reproduce with
+      just the tests (no API keys needed) — add two API keys if you want
+      it to talk to real models.
+    </p>
+    <div class="steps">
+      <div class="step">
+        <div class="num"></div>
+        <div class="step-body">
+          <h4>Clone and set up a virtual environment</h4>
+          <pre>git clone https://github.com/Mathias1801/agentic_showcase.git
+cd agentic_showcase
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt</pre>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num"></div>
+        <div class="step-body">
+          <h4>Generate the synthetic dataset</h4>
+          <pre>python data/generate_synthetic_data.py</pre>
+          <p>Builds <code>data/business.db</code> — a 5-dimension, 4-fact-table star schema with intentionally injected anomalies (see <a href="data_dictionary.md">data_dictionary.md</a>).</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num"></div>
+        <div class="step-body">
+          <h4>Run the test suite</h4>
+          <pre>python -m pytest tests/ -v</pre>
+          <p>75 tests against fake LLM clients — confirms all the guardrail logic on its own, no API key required.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num"></div>
+        <div class="step-body">
+          <h4>Run it against real models</h4>
+          <pre>export OPENAI_API_KEY=...      # Retrieval + Analysis (gpt-5.4-nano)
+export ANTHROPIC_API_KEY=...   # Critic (Claude Haiku 4.5)
+python demo.py --save          # writes docs/demo_transcript.md</pre>
+          <p>This is exactly what produced the live examples and the raw transcript above.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <footer>
     <span>Autonomous Business Analytics Agent — portfolio project. Full README and source in the repository root.</span>
-    <span><a href="demo_transcript.md">Raw transcript</a></span>
+    <span><a href="https://github.com/Mathias1801/agentic_showcase">Source on GitHub</a> · <a href="demo_transcript.md">Raw transcript</a></span>
   </footer>
 
 </main>
