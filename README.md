@@ -4,6 +4,9 @@ Portfolio project: a multi-agent system that answers ambiguous natural-language
 business questions against a synthetic multi-table business dataset, with an
 evaluation harness, observability, and guardrails.
 
+## Link to demo showcase
+https://mathias1801.github.io/agentic_showcase/ 
+
 ## Project structure
 
 ```
