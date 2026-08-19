@@ -1,0 +1,555 @@
+<title>Autonomous Business Analytics Agent</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A multi-agent business analytics pipeline with independent, cross-provider quality guardrails — shown against real, live pipeline output.">
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --bg-raised: #ffffff;
+    --bg-sunken: #f2f0ec;
+    --text: #1c1b19;
+    --text-dim: #5a564e;
+    --border: #e3ded4;
+    --accent: #8a5a2e;
+    --accent-bg: #f3e8d9;
+    --pass: #2f6d3f;
+    --pass-bg: #e6f2e8;
+    --reject: #a13a3a;
+    --reject-bg: #f7e8e6;
+    --hold: #9a6a10;
+    --hold-bg: #fbf0dc;
+    --code-bg: #f2f0ec;
+    --shadow: 0 1px 2px rgba(28,27,25,0.06), 0 4px 16px rgba(28,27,25,0.05);
+    --radius: 12px;
+    font-synthesis: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171614;
+      --bg-raised: #211f1c;
+      --bg-sunken: #1c1b18;
+      --text: #ede9e2;
+      --text-dim: #a89f8f;
+      --border: #38352e;
+      --accent: #e0a869;
+      --accent-bg: #332a1c;
+      --pass: #7fc794;
+      --pass-bg: #1e2f22;
+      --reject: #e08585;
+      --reject-bg: #332020;
+      --hold: #e0b969;
+      --hold-bg: #332b1a;
+      --code-bg: #1c1b18;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171614;
+    --bg-raised: #211f1c;
+    --bg-sunken: #1c1b18;
+    --text: #ede9e2;
+    --text-dim: #a89f8f;
+    --border: #38352e;
+    --accent: #e0a869;
+    --accent-bg: #332a1c;
+    --pass: #7fc794;
+    --pass-bg: #1e2f22;
+    --reject: #e08585;
+    --reject-bg: #332020;
+    --hold: #e0b969;
+    --hold-bg: #332b1a;
+    --code-bg: #1c1b18;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+  }
+  code, .mono { font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+
+  /* ---------- hero ---------- */
+  .eyebrow {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+  h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1.15;
+    margin: 0 0 0.9rem;
+    letter-spacing: -0.01em;
+  }
+  .lede {
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    max-width: 62ch;
+    margin: 0 0 1.75rem;
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 3rem;
+  }
+  .badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: var(--bg-sunken);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  section { margin-top: 3.5rem; }
+  h2 {
+    font-size: 1.4rem;
+    margin: 0 0 0.4rem;
+    letter-spacing: -0.01em;
+  }
+  .section-sub {
+    color: var(--text-dim);
+    margin: 0 0 1.5rem;
+    max-width: 68ch;
+  }
+
+  /* ---------- comparison ---------- */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .compare-col { background: var(--bg-raised); }
+  .compare-head {
+    padding: 1rem 1.25rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-col.traditional .compare-head { color: var(--reject); }
+  .compare-col.agentic .compare-head { color: var(--pass); }
+  .compare-row {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.92rem;
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row .dim {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+  }
+  @media (max-width: 640px) {
+    .compare { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- architecture ---------- */
+  .pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .stage {
+    flex: 1 1 180px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.1rem;
+    box-shadow: var(--shadow);
+  }
+  .stage .n {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+  .stage h3 { margin: 0.3rem 0 0.4rem; font-size: 1rem; }
+  .stage p { margin: 0; font-size: 0.85rem; color: var(--text-dim); }
+  .arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 1.3rem;
+    flex: 0 0 auto;
+    padding: 0 0.1rem;
+  }
+  @media (max-width: 720px) {
+    .pipeline { flex-direction: column; }
+    .arrow { transform: rotate(90deg); padding: 0.1rem 0; }
+  }
+
+  /* ---------- guardrail list ---------- */
+  .guardrails {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+  }
+  @media (max-width: 640px) { .guardrails { grid-template-columns: 1fr; } }
+  .grail {
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+  }
+  .grail h4 { margin: 0 0 0.3rem; font-size: 0.95rem; }
+  .grail p { margin: 0; font-size: 0.85rem; color: var(--text-dim); }
+
+  /* ---------- showcase cards ---------- */
+  .card {
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.3rem 0.9rem;
+  }
+  .card-id {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .card-q {
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0.2rem 0 0;
+  }
+  .status {
+    flex: 0 0 auto;
+    font-size: 0.74rem;
+    font-weight: 700;
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .status.pass { background: var(--pass-bg); color: var(--pass); }
+  .status.reject { background: var(--reject-bg); color: var(--reject); }
+  .status.hold { background: var(--hold-bg); color: var(--hold); }
+
+  .card-body { padding: 0 1.3rem 1.2rem; }
+  .card-why {
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    margin: 0 0 0.9rem;
+    padding-left: 0.8rem;
+    border-left: 3px solid var(--border);
+  }
+  .card-narrative {
+    font-size: 0.92rem;
+    background: var(--bg-sunken);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.9rem;
+  }
+  .card-narrative.rejected { font-style: italic; color: var(--text-dim); }
+
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+  .checks li {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    color: var(--text-dim);
+  }
+  .checks li .mark { flex: 0 0 1.1rem; font-weight: 700; }
+  .checks li .mark.ok { color: var(--pass); }
+  .checks li .mark.bad { color: var(--reject); }
+  .checks li .mark.flag { color: var(--hold); }
+
+  details.raw { margin-top: 0.9rem; }
+  details.raw summary {
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  details.raw pre {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 0.8rem 0.9rem;
+    font-size: 0.78rem;
+    overflow-x: auto;
+    margin: 0.6rem 0 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ---------- bug list ---------- */
+  .bugs { display: grid; gap: 0.9rem; }
+  .bug {
+    border: 1px solid var(--border);
+    background: var(--bg-raised);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.1rem;
+    font-size: 0.88rem;
+  }
+  .bug .t { font-weight: 700; display: block; margin-bottom: 0.25rem; }
+  .bug p { margin: 0; color: var(--text-dim); }
+
+  footer {
+    margin-top: 4.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    justify-content: space-between;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+
+<main>
+
+  <div class="eyebrow">Portfolio project — multi-agent systems</div>
+  <h1>An analytics agent that's designed to be told "no."</h1>
+  <p class="lede">
+    A four-agent pipeline that answers natural-language business questions
+    against a real dataset — but the interesting part isn't the answers,
+    it's the four independent, mostly-deterministic checks that stand
+    between a generated narrative and the stakeholder seeing it. Every
+    example below is a real run against real OpenAI + Claude Haiku 4.5 API
+    calls, not a mockup.
+  </p>
+  <div class="badges">
+    <span class="badge">4 specialized agents</span>
+    <span class="badge">4 independent guardrail layers</span>
+    <span class="badge">cross-provider critic (OpenAI generates, Claude judges)</span>
+    <span class="badge">75 tests passing</span>
+    <span class="badge">7 real bugs found &amp; fixed via live runs</span>
+  </div>
+
+  <section id="why">
+    <h2>Why not just ask a chatbot?</h2>
+    <p class="section-sub">
+      A single LLM call can already produce a fluent, confident-sounding
+      answer to "why did margin drop this quarter." The problem it can't
+      solve on its own is telling you when that confidence is unearned.
+      This project exists to fix that, structurally — not by prompting
+      harder, but by taking verification out of the model's hands wherever
+      possible.
+    </p>
+    <div class="compare">
+      <div class="compare-col traditional">
+        <div class="compare-head">Single-call / self-checking chatbot</div>
+        <div class="compare-row"><span class="dim">Numbers in the answer</span>Generated by the same model that writes the prose — never checked against the source data it was supposedly computed from.</div>
+        <div class="compare-row"><span class="dim">Root-cause claims</span>The model guesses. Tone is the only signal, and a confident guess reads identically to a well-supported finding.</div>
+        <div class="compare-row"><span class="dim">"Let me double-check that"</span>Usually the same model, or a bigger model in the same family, reviewing its own work — shared training lineage means shared blind spots.</div>
+        <div class="compare-row"><span class="dim">Thin evidence</span>A trend claimed from 2 data points reads exactly as confident as one backed by 200.</div>
+        <div class="compare-row"><span class="dim">Failure mode</span>Fails open — whatever text comes out gets shown to the user, whether or not it should be trusted.</div>
+        <div class="compare-row"><span class="dim">Debuggability</span>One prompt, one call. No visibility into <em>why</em> an answer looks the way it does.</div>
+      </div>
+      <div class="compare-col agentic">
+        <div class="compare-head">This pipeline</div>
+        <div class="compare-row"><span class="dim">Numbers in the answer</span>Computed once, outside any LLM, straight from the retrieved rows (pandas/numpy). Every number the narrative contains is checked against that set — twice, by two independent components.</div>
+        <div class="compare-row"><span class="dim">Root-cause claims</span>A rule-based causal-language scan flags any "why / caused by / driven by" claim for human sign-off — independent of what any model thinks of its own answer.</div>
+        <div class="compare-row"><span class="dim">"Let me double-check that"</span>Reviewed by a model from a <strong>different vendor entirely</strong> — Claude Haiku 4.5 judges what OpenAI gpt-5.4-nano wrote. Different pretraining data, different alignment process, uncorrelated blind spots.</div>
+        <div class="compare-row"><span class="dim">Thin evidence</span>A deterministic, row-count-based confidence threshold blocks trend/comparison claims that don't have the data to back them.</div>
+        <div class="compare-row"><span class="dim">Failure mode</span>Fails closed — unparseable judge output, failed grounding, or low confidence all <em>withhold</em> the answer instead of defaulting to showing it.</div>
+        <div class="compare-row"><span class="dim">Debuggability</span>Every rejection carries a specific, inspectable reason from a specific guardrail — see the live examples below.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture">
+    <h2>Pipeline</h2>
+    <p class="section-sub">Straight-line, hand-built — no orchestration framework. One question in, one Critic-approved (or rejected, or held) report out.</p>
+    <div class="pipeline">
+      <div class="stage">
+        <div class="n">01 · RETRIEVAL</div>
+        <h3>NL → SQL</h3>
+        <p>Question → validated, read-only, schema-bounded SQL → rows. Row cap, token budget, one self-correction retry.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="n">02 · ANALYSIS</div>
+        <h3>Facts → narrative</h3>
+        <p>Stats computed in pandas/numpy, never by the LLM. The model only narrates <em>about</em> facts it's given, and every number it writes is checked back against them.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="n">03 · CRITIC</div>
+        <h3>Four-layer QA</h3>
+        <p>Independent grounding re-check, confidence threshold, human-in-the-loop causal scan, and a cross-provider LLM judge.</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage">
+        <div class="n">04 · REPORT</div>
+        <h3>No LLM call</h3>
+        <p>Pure formatting. A rejected or low-confidence result structurally cannot be presented as a clean answer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="guardrails">
+    <h2>The four checks, in <code>agents/critic_agent.py</code></h2>
+    <div class="guardrails">
+      <div class="grail">
+        <h4>1. Independent grounding re-check</h4>
+        <p>Re-verifies every number in the narrative against the computed facts from scratch — doesn't trust the Analysis agent's own self-report, in case that check had a bug.</p>
+      </div>
+      <div class="grail">
+        <h4>2. Data-sufficiency confidence</h4>
+        <p>Row-count-based threshold for trend/ranking claims specifically. A one-row "total revenue" answer isn't penalized — a two-point "trend" is.</p>
+      </div>
+      <div class="grail">
+        <h4>3. Human-in-the-loop scan</h4>
+        <p>Rule-based, not model-based: any causal language ("caused by," "driven by," "the reason...") gets flagged for a person to confirm, regardless of whether it otherwise passes.</p>
+      </div>
+      <div class="grail">
+        <h4>4. Cross-provider LLM judge</h4>
+        <p>Claude Haiku 4.5 — a different vendor from the OpenAI model that generated the narrative — gives a structured verdict: does it answer the question, and is every claim actually supported.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="showcase">
+    <h2>Live output — four real runs</h2>
+    <p class="section-sub">
+      From <code>eval/golden_questions.py</code>, run straight through <code>demo.py</code>
+      against real APIs. Not chosen to guarantee an outcome — chosen to put
+      each guardrail in a position to actually do something, then reporting
+      whatever it actually did.
+    </p>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-id">A01 · simple_aggregation</div>
+          <p class="card-q">What was total gross revenue in 2024?</p>
+        </div>
+        <span class="status pass">PASSED — clean</span>
+      </div>
+      <div class="card-body">
+        <p class="card-why">A single verified total, no comparison or causal language — nothing for any guardrail to catch. Shows the system doesn't flag things that don't need flagging.</p>
+        <div class="card-narrative">Total gross revenue in 2024 was <strong>9,089,921.4</strong>. The provided data includes this figure only; it doesn't break it down by product, region, or month.</div>
+        <ul class="checks">
+          <li><span class="mark ok">✓</span> independent grounding check: OK (no ungrounded numbers)</li>
+          <li><span class="mark ok">✓</span> data-sufficiency confidence: OK (score 1.00)</li>
+          <li><span class="mark ok">✓</span> human-in-the-loop scan: clear</li>
+          <li><span class="mark ok">✓</span> Claude Haiku 4.5 judge: answers_question=true, unsupported_claims=[], confidence=high</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-id">C04 · causal_ambiguous</div>
+          <p class="card-q">Is the Smart Speaker Gen2 returns issue isolated to one region, or does it appear across all regions?</p>
+        </div>
+        <span class="status reject">REJECTED</span>
+      </div>
+      <div class="card-body">
+        <p class="card-why">The core factual claim (returns appear across all regions, not one) is correctly grounded in the retrieved per-region counts. But the narrative goes further, speculating that the spread "suggests" the issue is widespread and about whether drivers are shared across regions — neither is actually supported by the numbers. The Critic flags the overreach even though the headline claim was right.</p>
+        <div class="card-narrative rejected">Rejected by QA review: unsupported_claims = ["the underlying driver is the same in each region", "the pattern suggests it appears across multiple regions"]</div>
+        <ul class="checks">
+          <li><span class="mark ok">✓</span> independent grounding check: OK (no ungrounded numbers)</li>
+          <li><span class="mark ok">✓</span> data-sufficiency confidence: OK (score 0.65)</li>
+          <li><span class="mark ok">✓</span> human-in-the-loop scan: clear</li>
+          <li><span class="mark bad">✕</span> Claude Haiku 4.5 judge: answers_question=true, but 2 unsupported claims, confidence=high</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-id">C01 · causal_ambiguous</div>
+          <p class="card-q">Why did gross margin percentage drop for Home &amp; Garden products in Q2 2025?</p>
+        </div>
+        <span class="status reject">REJECTED</span>
+      </div>
+      <div class="card-body">
+        <p class="card-why">The Analysis agent only has margin-by-month numbers, not cost or pricing data — so any "why" it writes is a guess. The cross-provider Critic catches the unsupported claim and the answer is rejected instead of shipped.</p>
+        <div class="card-narrative rejected">Rejected by QA review: unsupported_claims = ["Why did gross margin percentage drop", "the drop"]</div>
+        <ul class="checks">
+          <li><span class="mark ok">✓</span> independent grounding check: OK (no ungrounded numbers)</li>
+          <li><span class="mark ok">✓</span> data-sufficiency confidence: OK (score 1.00)</li>
+          <li><span class="mark flag">⚑</span> human-in-the-loop scan: flagged (phrase: "drove")</li>
+          <li><span class="mark bad">✕</span> Claude Haiku 4.5 judge: answers_question=false, unsupported claims present</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-id">D02 · control_no_anomaly (trap question)</div>
+          <p class="card-q">What explains the difference in gross margin between Consumer and Enterprise segments?</p>
+        </div>
+        <span class="status hold">HELD</span>
+      </div>
+      <div class="card-body">
+        <p class="card-why">There is no real segment effect in this data — it's sampling noise. A system that confidently invents a story here (e.g. "Enterprise gets better pricing") should be marked down; the guardrails hold it back instead.</p>
+        <div class="card-narrative rejected">Could not produce a confident answer: confidence too low (0.45 &lt; threshold) — only 3 row(s) of supporting data.</div>
+        <ul class="checks">
+          <li><span class="mark ok">✓</span> independent grounding check: OK (no ungrounded numbers)</li>
+          <li><span class="mark bad">✕</span> data-sufficiency confidence: FAILED (score 0.45)</li>
+          <li><span class="mark flag">⚑</span> human-in-the-loop scan: flagged (phrase: "explain")</li>
+          <li><span class="mark bad">✕</span> Claude Haiku 4.5 judge: answers_question=false</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="section-sub">Full raw transcript: <a href="demo_transcript.md">demo_transcript.md</a>. Reproduce it yourself with <code>python demo.py --save</code>.</p>
+  </section>
+
+  <section id="bugs">
+    <h2>Proven against real API calls, not just fixtures</h2>
+    <p class="section-sub">
+      75 hand-written tests use fake LLM clients and passed the whole way
+      through development. None of the seven bugs below were caught by
+      them — every one only surfaced by actually running the pipeline
+      against real OpenAI and Claude Haiku 4.5 calls. That gap is the
+      reason this showcase exists as a live run rather than a scripted demo.
+    </p>
+    <div class="bugs">
+      <div class="bug"><span class="t">Grounding rejected the question's own timeframe</span><p>A narrative answering "...in 2025" naturally restates the year — but the grounding check only allowed numbers from computed facts, never the question, so almost every time-scoped answer failed to ground. Fixed in both the Analysis agent's check and the Critic's independent re-check.</p></div>
+      <div class="bug"><span class="t">Fence-stripping bug corrupted every JSON-fenced response</span><p><code>text[3:]</code> was hardcoded for a 3-letter fence tag ("sql") and silently mis-sliced 4-letter ones ("json"), leaving a stray character glued onto valid JSON and breaking every Critic verdict.</p></div>
+      <div class="bug"><span class="t">Critic only read the first content block</span><p><code>response.content[0].text</code> isn't guaranteed to be the whole answer — real Claude Haiku responses were silently discarded as empty strings.</p></div>
+      <div class="bug"><span class="t">Confidence guardrail penalized every single-row answer</span><p>"Total revenue in 2024" legitimately returns one row — that's a complete answer, not insufficient data. Fixed by distinguishing <code>single_value</code> results from trend/ranking claims that actually need multiple data points.</p></div>
+      <div class="bug"><span class="t">Schema didn't expose exact stored values</span><p>The model knew a <code>category</code> column existed but guessed <code>'Home and Garden'</code> instead of the real <code>'Home &amp; Garden'</code> — valid SQL, zero rows, no error.</p></div>
+      <div class="bug"><span class="t">Schema never explained how tables join</span><p>The model wrote a column directly on the wrong table by analogy with a similarly-named column elsewhere. Fixed by dynamically inferring and documenting join keys in the schema text.</p></div>
+      <div class="bug"><span class="t">Small-model JSON quoting quirk</span><p>Claude Haiku occasionally escapes an apostrophe as <code>\'</code> — invalid JSON — throwing away an otherwise-correct verdict. Hardened to repair that one known-safe pattern; still fails closed on any other malformation.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Autonomous Business Analytics Agent — portfolio project. Full README and source in the repository root.</span>
+    <span><a href="demo_transcript.md">Raw transcript</a></span>
+  </footer>
+
+</main>
